@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
     User.hasMany(models.Vote, { foreignKey: 'votedBy' });
     User.hasMany(models.Title, { foreignKey: "author" });
     User.hasMany(models.Story, { foreignKey: "contributor" });
-    User.hasMany(modes.Rating, { foreignKey: "reporter" });
+    User.hasMany(models.Rating, { foreignKey: "reporter" });
   };
   User.prototype.validPassword = function (password) {
     return bcrypt.compareSync(password, this.password);

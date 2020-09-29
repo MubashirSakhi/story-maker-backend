@@ -4,7 +4,7 @@ async function postedBy(root, { id }, context) {
 async function votes(root, { id }, context) {
     return context.models.Vote.findAll({
         where: {
-            linkId: id
+            linkId: root.id
         }
     })
 }

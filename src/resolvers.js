@@ -187,7 +187,7 @@ const resolvers = {
         async votes(root, { id }, context) {
             return context.models.Vote.findAll({
                 where: {
-                    linkId: id
+                    linkId: root.id
                 }
             })
         }

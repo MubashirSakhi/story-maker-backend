@@ -9,6 +9,8 @@ const Subscription = require('./resolvers/Subscription');
 const User = require('./resolvers/User');
 const Link = require('./resolvers/Link');
 const Vote = require('./resolvers/Vote');
+const Title = require('./resolvers/Title');
+const Story = require('./resolvers/Story');
 
 const pubsub = new PubSub();
 const resolvers = {
@@ -18,6 +20,8 @@ const resolvers = {
   User,
   Link,
   Vote,
+  Title,
+  Story
 }
 
 console.log("types is" + typeDefs);
