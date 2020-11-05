@@ -5,51 +5,10 @@ const { getUserId } = require('../utils');
 async function user(root, { id }, context) {
     return context.models.User.findByPk(id)
 }
-async function allRecipes(root, args, context) {
-    return context.models.Recipe.findAll()
-}
-async function recipe(root, { id }, context) {
-    return context.Recipe.findByPk(id)
-}
-async function feed(root, { filter, skip, limit, orderBy }, context) {
-    let query;
-    let order = [];
-    if (orderBy) {
-        for (let key in orderBy) {
-            order.push([key, orderBy[key]])
-        }
-    }
-    if (filter) {
-        query = {
-            [Op.or]: [{
-                url: {
-                    [Op.like]: "%" + filter + "%"
-                }
-            }, {
-                description: {
-                    [Op.like]: "%" + filter + "%"
-                }
-            }],
-        }
-    }
-    else {
-        query = {};
-    }
-    return context.models.Link.findAndCountAll({
-        where: query,
-        offset: skip,
-        limit: limit,
-        order: order
-    })
-        .then(links => {
-            return ({ links: links.rows, count: links.count })
-        })
 
-}
-async function getLink(root, { id }, context) {
-    const userId = getUserId(context);
-    return context.models.Link.findByPk(id);
-}
+
+
+
 async function getTitles(root, { filter, skip, limit, orderBy }, context) {
     let query;
     let order = [];
@@ -78,7 +37,7 @@ async function getTitles(root, { filter, skip, limit, orderBy }, context) {
         where: query,
         offset: skip,
         limit: limit,
-        order: [['createdAt','DESC']]
+        order: [['createdAt', 'DESC']]
     })
         .then(titlesDb => {
             return ({ titles: titlesDb.rows, count: titlesDb.count })
@@ -122,6 +81,14 @@ async function getStories(root, { id, filter, skip, limit, orderBy }, context) {
     }
     return context.models.Story.findAndCountAll({
         where: query,
+        attributes: [
+            "id",
+            context.models.sequelize.literal('substr(story, 1, 20) as story'),
+            "createdAt",
+            "contributor",
+            "story",
+            "titleId"
+        ],
         limit: limit,
         offset: skip,
         order: orderBy
@@ -134,24 +101,26 @@ async function getStories(root, { id, filter, skip, limit, orderBy }, context) {
         })
 }
 async function getStory(root, { id }, context) {
-    return context.models.Story.findAll({
+    return context.models.Story.findOne({
         where: {
             id: id
         }
+    });
+
+}
+async function getStoriesByUser(root, { }, context) {
+    const userId = getUserId(context);
+    return context.models.Story.findAll({
+        where: {
+            contributor: userId
+        }
     })
-        .then(storyDb => {
-            return ({ story: storyDb })
-        })
-        .catch(e => {
-            throw e;
-        })
 }
 module.exports = {
-    feed,
-    getLink,
     getTitles,
     getTitlesByUser,
     getTitle,
     getStories,
-    getStory
+    getStory,
+    getStoriesByUser
 }

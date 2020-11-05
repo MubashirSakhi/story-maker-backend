@@ -21,10 +21,11 @@ async function totalRating(root, { id }, context) {
         .then(ratingAvg => {
             if(ratingAvg[0].value !== null && ratingAvg[0].value !== undefined){
                 console.log(parseFloat(ratingAvg[0].value));
-                return ({ totalRating: parseFloat(ratingAvg[0].value) });
+                return ratingAvg[0].dataValues.valueCount;
             }
             else{
-                ({ totalRating: null });
+                console.log("null total")
+               return null;
             }
             
         })

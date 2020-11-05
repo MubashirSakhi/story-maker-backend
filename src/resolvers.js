@@ -6,20 +6,13 @@ const Op = Sequelize.Op;
 function newLinkSubscribe(parent, args, context, info) {
     return context.pubsub.asyncIterator("NEW_LINK")
 }
-function newVoteSubscribe(parent, args, context, info) {
-    return context.pubsub.asyncIterator("NEW_VOTE")
-}
+
 const resolvers = {
     Query: {
         async user(root, { id }, context) {
             return context.models.User.findByPk(id)
         },
-        async allRecipes(root, args, context) {
-            return context.models.Recipe.findAll()
-        },
-        async recipe(root, { id }, context) {
-            return context.Recipe.findByPk(id)
-        },
+        
         async feed(root, { filter, skip, limit, orderBy }, context) {
             let query;
             let order = [];
@@ -69,10 +62,7 @@ const resolvers = {
                 password: await bcrypt.hash(password, 10)
             })
         },
-        async createRecipe(root, { userId, title, ingredients, direction }, context) {
-            console.log("model" + models);
-            return context.models.Recipe.create({ userId, title, ingredients, direction })
-        },
+        
         async createLink(root, { url, description, postedBy }, context) {
             const userId = getUserId(context);
             return context.models.Link.create({
@@ -141,30 +131,7 @@ const resolvers = {
                     return e.message
                 })
         },
-        async vote(root, { linkId }, context) {
-            const userId = getUserId(context);
-            return context.models.Vote.findOne({
-                where: {
-                    linkId: linkId,
-                    votedBy: userId
-                }
-            })
-                .then(vote => {
-                    if (vote) {
-                        throw new Error(`Already voted for link: ${linkId}`)
-                    }
-                    else {
-                        return context.models.Vote.create({
-                            linkId: linkId,
-                            votedBy: userId
-                        })
-                    }
-                })
-                .then(voted => {
-                    context.pubsub.publish("NEW_VOTE", voted)
-                    return voted;
-                })
-        }
+        
     },
     User: {
         async Links(root, { id }, context) {
@@ -175,37 +142,8 @@ const resolvers = {
             })
         }
     },
-    Recipe: {
-        async user(recipe) {
-            return recipe.getUser()
-        }
-    },
-    Link: {
-        async postedBy(root, { id }, context) {
-            return context.models.User.findByPk(root.postedBy)
-        },
-        async votes(root, { id }, context) {
-            return context.models.Vote.findAll({
-                where: {
-                    linkId: root.id
-                }
-            })
-        }
-    },
-    Vote: {
-        async link(root, { }, context) {
-            return context.models.Vote.findByPk(root.id, { include: [{ model: context.models.Link, as: "links" }] })
-                .then(voteDb => {
-                    return voteDb.links;
-                })
-        },
-        async user(root, { }, context) {
-            return context.models.Vote.findByPk(root.id, { include: [{ model: context.models.User, as: "users" }] })
-                .then(voteDb => {
-                    return voteDb.users;
-                })
-        }
-    },
+    
+    
     Subscription: {
         newLink: {
             subscribe: newLinkSubscribe,
