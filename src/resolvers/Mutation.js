@@ -27,7 +27,7 @@ async function signup(root, { email, password, name }, context) {
             return ({ user: userdb, token: token })
         })
         .catch(e => {
-            throw e.message;
+            throw e;
         })
 }
 async function login(root, { email, password }, context) {
@@ -37,12 +37,18 @@ async function login(root, { email, password }, context) {
         }
     })
         .then(userdb => {
-            if (userdb.validPassword(password)) {
-                const token = jwt.sign({ userId: userdb.id }, APP_SECRET)
-                return ({ user: userdb, token: token })
+            if (userdb) {
+                if (userdb.validPassword(password)) {
+                    const token = jwt.sign({ userId: userdb.id }, APP_SECRET)
+                    return ({ user: userdb, token: token })
+                }
+                else {
+                    throw new Error("Email or Password is incorrect!")
+                }
             }
+
             else {
-                throw new Error("Email or Password is incorrect")
+                throw new Error("Email or Password is incorrect!");
             }
         })
         .catch(e => {
@@ -74,14 +80,21 @@ async function updateTitle(root, { id, name, background }, context) {
         }
     })
         .then(titleDb => {
-            if (name !== undefined) {
-                titleDb.name = name;
+            if (titleDb) {
+                if (name !== undefined) {
+                    titleDb.name = name;
+                }
+                if (background !== undefined) {
+                    titleDb.background = background;
+                }
+                return titleDb.save()
             }
-            if (background !== undefined) {
-                titleDb.background = background;
+            else{
+                throw new Error("Title does not exist");
             }
-            return titleDb.save()
+
         })
+        .catch(e)
 }
 async function deleteTitle(root, { id }, context) {
     let userId = getUserId(context);
@@ -95,6 +108,9 @@ async function deleteTitle(root, { id }, context) {
         .then(() => {
             return true;
         })
+        .catch(err => {
+            return err;
+        } )
 
 }
 async function createStory(root, { story, titleId }, context) {
@@ -104,19 +120,19 @@ async function createStory(root, { story, titleId }, context) {
         titleId: titleId,
         contributor: userId
     })
-    .then(storyDb => {
-        context.pubsub.publish("NEW_STORY", storyDb);
-        return storyDb;
-    })
-    .catch(err => {
-        return err
-    })
+        .then(storyDb => {
+            context.pubsub.publish("NEW_STORY", storyDb);
+            return storyDb;
+        })
+        .catch(err => {
+            return err
+        })
 }
-async function updateStory(root, { id, story }, context) {
+async function updateStory(root, { storyId, story }, context) {
     let userId = getUserId(context);
     return context.models.Story.findOne({
         where: {
-            id: id,
+            id: storyId,
             contributor: userId
         }
     })
@@ -127,16 +143,20 @@ async function updateStory(root, { id, story }, context) {
             return storyDb.save();
         })
 }
-async function deleteStory(root, { id }, context) {
+async function deleteStory(root, { storyId }, context) {
     let userId = getUserId(context);
-    return context.modes.Story.destroy({
+    //remove any rating to this story before deleting any story
+    return context.models.Story.destroy({
         where: {
-            id: id,
+            id: storyId,
             contributor: userId
         }
     })
         .then(() => {
             return true;
+        })
+        .catch(err =>{
+            return err;
         })
 }
 async function createRating(root, { value, storyId, comment }, context) {
@@ -147,7 +167,7 @@ async function createRating(root, { value, storyId, comment }, context) {
         storyId: storyId,
         comment: comment !== undefined ? comment : null
     })
-    
+
 }
 async function deleteRating(root, { id }, context) {
     let userId = getUserId(context);
@@ -160,9 +180,12 @@ async function deleteRating(root, { id }, context) {
         .then(() => {
             return true;
         })
+        .catch(err => {
+            return err;
+        })
 }
 module.exports = {
-    
+
     signup,
     login,
     createTitle,

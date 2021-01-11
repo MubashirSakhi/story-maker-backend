@@ -6,7 +6,6 @@ const typeDefs = gql`
         id: Int!
         name: String!
         email: String!
-        Links:[Link!]!
         Title:[Title!]
 
       }
@@ -27,10 +26,7 @@ const typeDefs = gql`
       Ratings:[Rating!]
       totalRating:Float
     }
-    type Feed {
-      links: [Link!]!
-      count: Int!
-    }
+   
     type TitleFeed {
       titles:[Title]!
       count: Int!
@@ -46,7 +42,8 @@ const typeDefs = gql`
     type Rating{
       id:Int!
       value:Int!
-      comment:String
+      comment:String,
+      ratedBy:User
     } 
     type AuthPayload {
         token: String
@@ -54,11 +51,7 @@ const typeDefs = gql`
       }
     
     
-    input LinkOrderByInput {
-      description: Sort
-      url: Sort
-      createdAt: Sort
-    }
+  
     input TitleOrderByInput{
       name:Sort
       background:Sort
@@ -75,8 +68,8 @@ const typeDefs = gql`
     type Query {
         user(id: Int!): User
         info: String!
-        feed(filter:String,skip:Int,limit:Int,orderBy: LinkOrderByInput): Feed!
-        getLink(id: ID!): Link
+        # feed(filter:String,skip:Int,limit:Int,orderBy: LinkOrderByInput): Feed!
+        # getLink(id: ID!): Link
         getTitles(filter:String,skip:Int,limit:Int):TitleFeed!
         getTitlesByUser:[Title]!
         getTitle(id:Int): Title!   
@@ -86,6 +79,7 @@ const typeDefs = gql`
     }
     type Subscription{
       newTitle: Title
+      newStory: Story
     }
     type Mutation {
         createUser(name: String!, email: String!, password: String!): User!
@@ -94,12 +88,12 @@ const typeDefs = gql`
         
         login(email: String!, password: String!): AuthPayload
         
-        createLink(url:String, description:String, postedBy:Int): Link!
+        # createLink(url:String, description:String, postedBy:Int): Link!
         # Update a link
-        updateLink(id: ID!, url: String, description: String): Link!
+        # updateLink(id: ID!, url: String, description: String): Link!
       
         # Delete a link
-        deleteLink(id: ID!): Boolean
+        #deleteLink(id: ID!): Boolean
         
         #createTitle
         createTitle(name:String,background:String):Title

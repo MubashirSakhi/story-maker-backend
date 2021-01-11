@@ -10,7 +10,13 @@ module.exports = {
       },
       name: {
         type: Sequelize.STRING,
-        allowNull:false
+        allowNull: false,
+        validate: {
+          len: {
+            args: [2, 100],
+            msg: "Minimum 4 characters required in bowlingtype"
+          }
+        }
       },
       author: {
         type: Sequelize.INTEGER,
@@ -19,7 +25,7 @@ module.exports = {
           key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
+        onDelete: 'CASCADE',
       },
       background: {
         type: Sequelize.TEXT

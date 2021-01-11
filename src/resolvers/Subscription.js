@@ -14,13 +14,12 @@ const newTitle = {
     }
 }
 const newStory = {
-    subscribe: newTitleSubscribe,
+    subscribe: newStorySubscribe,
     resolve: payload => {
         return payload
     }
 }
 module.exports = {
-    
     newTitle,
-    newStorySubscribe
+    newStory
 }
