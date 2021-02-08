@@ -14,9 +14,6 @@ async function createUser(root, { name, email, password }, context) {
     })
 }
 
-
-
-
 async function signup(root, { email, password, name }, context) {
     return context.models.User.create({
         name,

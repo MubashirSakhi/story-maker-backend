@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 const APP_SECRET = process.env.STORY_APP_SECRET;
-function getUserId(context) {
+function getUserId(context) { // function is to check the token and verify it
   const Authorization = context.req.get('Authorization')
   try {
     if (Authorization) {
