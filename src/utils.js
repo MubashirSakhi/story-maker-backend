@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken')
-const APP_SECRET = "somesecretsarenottold";
-
+const APP_SECRET = process.env.STORY_APP_SECRET;
 function getUserId(context) {
   const Authorization = context.req.get('Authorization')
   try {

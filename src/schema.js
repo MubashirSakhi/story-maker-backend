@@ -49,7 +49,9 @@ const typeDefs = gql`
         token: String
         user: User
       }
-    
+      input AuthInput {
+        accessToken: String!
+      }
     
   
     input TitleOrderByInput{
@@ -87,7 +89,8 @@ const typeDefs = gql`
         signup(email: String!, password: String!, name: String!): AuthPayload
         
         login(email: String!, password: String!): AuthPayload
-        
+        authFacebook(input: AuthInput!): AuthPayload
+        authGoogle(input: AuthInput!): AuthPayload
         # createLink(url:String, description:String, postedBy:Int): Link!
         # Update a link
         # updateLink(id: ID!, url: String, description: String): Link!

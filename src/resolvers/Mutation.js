@@ -1,7 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { APP_SECRET, getUserId } = require('../utils');
-
+const { authenticateFacebook, authenticateGoogle } = require('../passport');
+const Users = require('../../models/user');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -20,6 +21,7 @@ async function signup(root, { email, password, name }, context) {
     return context.models.User.create({
         name,
         email,
+        provider: 'basic',
         password: await bcrypt.hash(password, 10)
     })
         .then(userdb => {
@@ -33,12 +35,13 @@ async function signup(root, { email, password, name }, context) {
 async function login(root, { email, password }, context) {
     return context.models.User.findOne({
         where: {
-            email: email
+            email: email,
+            provider: 'basic'
         }
     })
         .then(userdb => {
             if (userdb) {
-                if (userdb.validPassword(password)) {
+                if (userdb.validPassword(password) && userdb.password !== null) {
                     const token = jwt.sign({ userId: userdb.id }, APP_SECRET)
                     return ({ user: userdb, token: token })
                 }
@@ -55,7 +58,115 @@ async function login(root, { email, password }, context) {
             throw e;
         })
 }
+async function authFacebook(root, { input: { accessToken } }, context) {
+    context.req.body = {
+        ...context.req.body,
+        access_token: accessToken,
+    };
+    try {
+        // data contains the accessToken, refreshToken and profile from passport
+        const { data, info } = await authenticateFacebook(context.req, context.res);
 
+        if (data) {
+            const user = await context.models.User.findOne(
+                {
+                    where: {
+                        profileId: data.profile.id
+                    }
+                });
+            if (!user) {
+                const newUser = await context.models.User.create({
+                    provider: "facebook",
+                    profileId: data.profile.id,
+                    email: data.profile.emails && data.profile.emails[0] && data.profile.emails[0].value,
+                    name: data.profile.name.givenName,
+                    token: context.req.body.accessToken
+                });
+                const token = jwt.sign({ userId: newUser.id }, APP_SECRET);
+                return ({
+                    user: newUser,
+                    token: token
+                })
+            }
+            else {
+                const token = jwt.sign({ userId: user.id }, APP_SECRET);
+                return ({
+                    user: user,
+                    token: token
+                })
+            }
+
+        }
+
+        if (info) {
+            console.log(info);
+            switch (info.code) {
+                case 'ETIMEDOUT':
+                    return (new Error('Failed to reach Facebook: Try Again'));
+                default:
+                    return (new Error('something went wrong'));
+            }
+        }
+        return (Error('server error'));
+    } catch (error) {
+        return error;
+    }
+}
+async function authGoogle(root, { input: { accessToken } }, context) {
+    context.req.body = {
+        ...context.req.body,
+        access_token: accessToken,
+    };
+
+    try {
+        // data contains the accessToken, refreshToken and profile from passport
+        const { data, info } = await authenticateGoogle(context.req, context.res);
+
+        if (data) {
+            const user = await context.models.User.findOne({
+                where: {
+                    profileId: data.profile.id
+                }
+            });
+            if (!user) {
+                const newUser = await context.models.User.create({
+                    provider: "google",
+                    profileId: data.profile.id,
+                    email: data.profile.emails && data.profile.emails[0] && data.profile.emails[0].value,
+                    name: data.profile.name.givenName,
+                    token: context.req.body.accessToken
+                });
+                const token = jwt.sign({ userId: newUser.id }, APP_SECRET);
+                return ({
+                    user: user,
+                    token: token
+                })
+            }
+            else {
+                const token = jwt.sign({ userId: user.id }, APP_SECRET);
+                return ({
+                    user: user,
+                    token: token
+                })
+            }
+
+        }
+
+
+        if (info) {
+            console.log(info);
+            switch (info.code) {
+                case 'ETIMEDOUT':
+                    return (new Error('Failed to reach Google: Try Again'));
+                default:
+                    return (new Error('something went wrong'));
+            }
+        }
+        return (Error('server error'));
+    } catch (error) {
+        return error;
+    }
+}
 async function createTitle(root, { name, background }, context) {
     let userId = getUserId(context);
     return context.models.Title.create({
@@ -89,12 +200,14 @@ async function updateTitle(root, { id, name, background }, context) {
                 }
                 return titleDb.save()
             }
-            else{
+            else {
                 throw new Error("Title does not exist");
             }
 
         })
-        .catch(e)
+        .catch(err => {
+            return err;
+        })
 }
 async function deleteTitle(root, { id }, context) {
     let userId = getUserId(context);
@@ -110,7 +223,7 @@ async function deleteTitle(root, { id }, context) {
         })
         .catch(err => {
             return err;
-        } )
+        })
 
 }
 async function createStory(root, { story, titleId }, context) {
@@ -137,10 +250,13 @@ async function updateStory(root, { storyId, story }, context) {
         }
     })
         .then(storyDb => {
-            if (story !== undefined) {
+            if (storyDb !== undefined) {
                 storyDb.story = story;
             }
             return storyDb.save();
+        })
+        .catch(err => {
+            return err;
         })
 }
 async function deleteStory(root, { storyId }, context) {
@@ -155,7 +271,7 @@ async function deleteStory(root, { storyId }, context) {
         .then(() => {
             return true;
         })
-        .catch(err =>{
+        .catch(err => {
             return err;
         })
 }
@@ -188,6 +304,8 @@ module.exports = {
 
     signup,
     login,
+    authFacebook,
+    authGoogle,
     createTitle,
     updateTitle,
     deleteTitle,

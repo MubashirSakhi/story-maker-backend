@@ -27,7 +27,6 @@ module.exports = {
         }
       },
       password: {
-        allowNull: false,
         type: Sequelize.STRING,
         validate: {
           len: {
@@ -35,6 +34,18 @@ module.exports = {
             msg: "Minimum 4 characters required in username"
           }
         }
+      },
+      provider:{
+        type:Sequelize.STRING,
+        validate:{
+          isIn: [['basic', 'facebook', 'google']],
+        }
+      },
+      profileId:{
+        type:Sequelize.STRING,
+      },
+      token:{
+        type:Sequelize.STRING,
       },
       createdAt: {
         allowNull: false,

@@ -1,4 +1,11 @@
 const { ApolloServer, PubSub } = require('apollo-server')
+const express = require('express');
+// const { GraphQLLocalStrategy, buildContext } = 'graphql-passport';
+const passport = require('passport');
+// const { GraphQLLocalStrategy } = require('graphql-passport');
+const Users = require('../models/user').User;
+const app = express();
+
 const typeDefs = require('./schema')
 // const resolvers = require('./resolvers')
 const models = require('../models')
@@ -13,6 +20,74 @@ const Title = require('./resolvers/Title');
 const Story = require('./resolvers/Story');
 const Rating = require('./resolvers/Ratings');
 const pubsub = new PubSub();
+
+const PORT = 4000;
+const SESSION_SECRECT = 'bad secret';
+
+// const facebookOptions = {
+//   clientID: process.env.FACEBOOK_APP_ID,
+//   clientSecret: process.env.FACEBOOK_APP_SECRET,
+//   callbackURL: 'http://localhost:4000/auth/facebook/callback',
+//   profileFields: ['id', 'email', 'first_name', 'last_name'],
+// };
+
+// const facebookCallback = (accessToken, refreshToken, profile, done) => {
+//   Users.findOne({
+//     where: {
+//       profileId: profile.id,
+//       type:'facebook'
+//     }
+//   })
+//     .then(userDb => {
+//       if (userDb) {
+//         const token = jwt.sign({ userId: userDb.id }, APP_SECRET);
+//         done(null, {user:userDb,token:token});
+//       }
+//       else {
+//         return User.create({
+//           facebookId: profile.id,
+//           name: profile.name.givenName,
+//           email: profile.emails && profile.emails[0] && profile.emails[0].value
+//         })
+//       }
+//     })
+//     .then(newUserDb => {
+//       const token = jwt.sign({ userId: newUserDb.id }, APP_SECRET);
+//       done(null, {user:newUserDb,token:token});
+//     })
+//     .catch(e)
+
+
+// };
+
+// passport.use(new FacebookStrategy(
+//   facebookOptions,
+//   facebookCallback,
+// ));
+
+// passport.serializeUser((user, done) => {
+//   done(null, user.id);
+// });
+
+// passport.deserializeUser((id, done) => {
+//   const users = User.getUsers();
+//   const matchingUser = users.find(user => user.id === id);
+//   done(null, matchingUser);
+// });
+
+// app.use(session({
+//   genid: (req) => uuid(),
+//   secret: SESSION_SECRECT,
+//   resave: false,
+//   saveUninitialized: false,
+// }));
+
+// app.use(passport.initialize());
+// app.use(passport.session());
+
+
+
+
 const resolvers = {
   Query,
   Mutation,
@@ -34,7 +109,7 @@ const server = new ApolloServer({
     if (err.type == "validation error") {
       return err;
     }
-    else if(err.originalError !== undefined) {
+    else if (err.originalError !== undefined) {
       if (err.originalError.name == 'SequelizeValidationError') {
         err.extensions.errorString = {};
         err.extensions.errorString.message = "database validation Error";
@@ -72,11 +147,11 @@ const server = new ApolloServer({
         })
         return err.extensions.errorString;
       }
-      else{
+      else {
         return err;
       }
     }
-    else if(err.name = "GraphQLError"){
+    else if (err.name = "GraphQLError") {
       return err;
     }
 

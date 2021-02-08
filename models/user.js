@@ -24,13 +24,24 @@ module.exports = (sequelize, DataTypes) => {
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false,
       validate: {
         len: {
           args: [3],
           msg: "Minimum 4 characters required in username"
         }
       }
+    },
+    provider:{
+      type:DataTypes.STRING,
+      validate:{
+        isIn: [['basic', 'facebook', 'google']],
+      }
+    },
+    profileId:{
+      type:DataTypes.STRING,
+    },
+    token:{
+      type:DataTypes.STRING,
     }
   }, {});
   User.associate = function (models) {
@@ -40,6 +51,20 @@ module.exports = (sequelize, DataTypes) => {
     User.hasMany(models.Story, { foreignKey: "contributor" });
     User.hasMany(models.Rating, { foreignKey: "ratedBy" });
   };
+  // User.findAllUsers = function(query){
+  //   User.findAll({
+  //     query
+  //   })
+  //   .then(userDb => {
+  //     if(userDb){
+  //       return userDb
+  //     }
+  //     else{
+  //       throw new Error('no user Found');
+  //     }
+  //   })
+  //   .catch(e)
+  // }
   User.prototype.validPassword = function (password) {
     return bcrypt.compareSync(password, this.password);
   }

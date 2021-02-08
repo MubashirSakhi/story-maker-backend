@@ -12,7 +12,12 @@
   "dependencies": {
     "apollo-server": "^2.16.1",
     "bcryptjs": "^2.4.3",
+    "express": "^4.17.1",
     "graphql": "^15.3.0",
+    "graphql-passport": "^0.6.3",
+    "passport": "^0.4.1",
+    "passport-facebook-token": "^4.0.0",
+    "passport-google-token": "^0.1.2",
     "sequelize": "^6.3.4",
     "sequelize-cli": "^6.2.0",
     "sqlite3": "^5.0.0"
