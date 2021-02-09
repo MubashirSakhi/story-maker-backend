@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { APP_SECRET, getUserId } = require('../utils');
 const { authenticateFacebook, authenticateGoogle } = require('../passport');
-const User = require('../../models/user');
+const User = require('../../models').User;
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
