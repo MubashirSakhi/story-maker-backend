@@ -1,7 +1,8 @@
 const passport = require('passport');
 const FacebookTokenStrategy = require('passport-facebook-token');
 const { Strategy: GoogleTokenStrategy } = require('passport-google-token');
-
+const dotenv = require('dotenv');
+dotenv.config();
 // FACEBOOK STRATEGY
 const FacebookTokenStrategyCallback = (accessToken, refreshToken, profile, done) => done(null, {
     accessToken,

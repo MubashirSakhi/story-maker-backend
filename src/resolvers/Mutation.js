@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { APP_SECRET, getUserId } = require('../utils');
 const { authenticateFacebook, authenticateGoogle } = require('../passport');
-const Users = require('../../models/user');
+const User = require('../../models/user');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 
@@ -22,7 +22,7 @@ async function signup(root, { email, password, name }, context) {
         password: await bcrypt.hash(password, 10)
     })
         .then(userdb => {
-            const token = jwt.sign({ userId: userdb.id }, APP_SECRET)
+            const token = userdb.generateJWT();
             return ({ user: userdb, token: token })
         })
         .catch(e => {
@@ -39,7 +39,7 @@ async function login(root, { email, password }, context) {
         .then(userdb => {
             if (userdb) {
                 if (userdb.validPassword(password) && userdb.password !== null) {
-                    const token = jwt.sign({ userId: userdb.id }, APP_SECRET)
+                    const token = userdb.generateJWT();
                     return ({ user: userdb, token: token })
                 }
                 else {
@@ -65,48 +65,28 @@ async function authFacebook(root, { input: { accessToken } }, context) {
         const { data, info } = await authenticateFacebook(context.req, context.res);
 
         if (data) {
-            const user = await context.models.User.findOne(
-                {
-                    where: {
-                        profileId: data.profile.id
-                    }
-                });
-            if (!user) {
-                const newUser = await context.models.User.create({
-                    provider: "facebook",
-                    profileId: data.profile.id,
-                    email: data.profile.emails && data.profile.emails[0] && data.profile.emails[0].value,
-                    name: data.profile.name.givenName,
-                    token: context.req.body.accessToken
-                });
-                const token = jwt.sign({ userId: newUser.id }, APP_SECRET);
-                return ({
-                    user: newUser,
-                    token: token
-                })
-            }
-            else {
-                const token = jwt.sign({ userId: user.id }, APP_SECRET);
+            const user = await User.upsertFbUser(data);
+            if (user) {
                 return ({
                     user: user,
-                    token: token
+                    token: user.generateJWT()
                 })
-            }
 
+            }
         }
 
         if (info) {
             console.log(info);
             switch (info.code) {
                 case 'ETIMEDOUT':
-                    return (new Error('Failed to reach Facebook: Try Again'));
+                    throw (new Error('Failed to reach Facebook: Try Again'));
                 default:
-                    return (new Error('something went wrong'));
+                    throw (new Error('something went wrong'));
             }
         }
-        return (Error('server error'));
+        throw (Error('server error'));
     } catch (error) {
-        return error;
+        throw error;
     }
 }
 async function authGoogle(root, { input: { accessToken } }, context) {
@@ -120,48 +100,28 @@ async function authGoogle(root, { input: { accessToken } }, context) {
         const { data, info } = await authenticateGoogle(context.req, context.res);
 
         if (data) {
-            const user = await context.models.User.findOne({
-                where: {
-                    profileId: data.profile.id
-                }
-            });
-            if (!user) {
-                const newUser = await context.models.User.create({
-                    provider: "google",
-                    profileId: data.profile.id,
-                    email: data.profile.emails && data.profile.emails[0] && data.profile.emails[0].value,
-                    name: data.profile.name.givenName,
-                    token: context.req.body.accessToken
-                });
-                const token = jwt.sign({ userId: newUser.id }, APP_SECRET);
+            const user = await User.upsertGoogleUser(data);
+            if (user) {
                 return ({
                     user: user,
-                    token: token
+                    token: user.generateJWT()
                 })
-            }
-            else {
-                const token = jwt.sign({ userId: user.id }, APP_SECRET);
-                return ({
-                    user: user,
-                    token: token
-                })
-            }
 
+            }
         }
-
-
         if (info) {
             console.log(info);
             switch (info.code) {
                 case 'ETIMEDOUT':
-                    return (new Error('Failed to reach Google: Try Again'));
+                    throw (new Error('Failed to reach Google: Try Again'));
                 default:
-                    return (new Error('something went wrong'));
+                    throw (new Error('something went wrong'));
             }
         }
-        return (Error('server error'));
+        throw (Error('server error'));
+
     } catch (error) {
-        return error;
+        throw error;
     }
 }
 async function createTitle(root, { name, background }, context) {

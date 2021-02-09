@@ -22,72 +22,6 @@ const Rating = require('./resolvers/Ratings');
 const pubsub = new PubSub();
 
 const PORT = 4000;
-const SESSION_SECRECT = 'bad secret';
-
-// const facebookOptions = {
-//   clientID: process.env.FACEBOOK_APP_ID,
-//   clientSecret: process.env.FACEBOOK_APP_SECRET,
-//   callbackURL: 'http://localhost:4000/auth/facebook/callback',
-//   profileFields: ['id', 'email', 'first_name', 'last_name'],
-// };
-
-// const facebookCallback = (accessToken, refreshToken, profile, done) => {
-//   Users.findOne({
-//     where: {
-//       profileId: profile.id,
-//       type:'facebook'
-//     }
-//   })
-//     .then(userDb => {
-//       if (userDb) {
-//         const token = jwt.sign({ userId: userDb.id }, APP_SECRET);
-//         done(null, {user:userDb,token:token});
-//       }
-//       else {
-//         return User.create({
-//           facebookId: profile.id,
-//           name: profile.name.givenName,
-//           email: profile.emails && profile.emails[0] && profile.emails[0].value
-//         })
-//       }
-//     })
-//     .then(newUserDb => {
-//       const token = jwt.sign({ userId: newUserDb.id }, APP_SECRET);
-//       done(null, {user:newUserDb,token:token});
-//     })
-//     .catch(e)
-
-
-// };
-
-// passport.use(new FacebookStrategy(
-//   facebookOptions,
-//   facebookCallback,
-// ));
-
-// passport.serializeUser((user, done) => {
-//   done(null, user.id);
-// });
-
-// passport.deserializeUser((id, done) => {
-//   const users = User.getUsers();
-//   const matchingUser = users.find(user => user.id === id);
-//   done(null, matchingUser);
-// });
-
-// app.use(session({
-//   genid: (req) => uuid(),
-//   secret: SESSION_SECRECT,
-//   resave: false,
-//   saveUninitialized: false,
-// }));
-
-// app.use(passport.initialize());
-// app.use(passport.session());
-
-
-
-
 const resolvers = {
   Query,
   Mutation,
@@ -98,7 +32,6 @@ const resolvers = {
   Rating
 }
 
-console.log("types is" + typeDefs);
 const server = new ApolloServer({
   typeDefs: typeDefs,
   resolvers,
