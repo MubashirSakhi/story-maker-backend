@@ -40,6 +40,7 @@ const server = new ApolloServer({
     // Don't give the specific errors to the client.    
 
     if (err.type == "validation error") {
+      err.statusCode = 400;
       return err;
     }
     else if (err.originalError !== undefined) {

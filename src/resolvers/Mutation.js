@@ -15,45 +15,44 @@ async function createUser(root, { name, email, password }, context) {
 }
 
 async function signup(root, { email, password, name }, context) {
-    return context.models.User.create({
-        name,
-        email,
-        provider: 'basic',
-        password: await bcrypt.hash(password, 10)
-    })
-        .then(userdb => {
-            const token = userdb.generateJWT();
-            return ({ user: userdb, token: token })
+    try {
+        const user = await context.models.User.create({
+            name,
+            email,
+            provider: 'basic',
+            password: await bcrypt.hash(password, 10)
         })
-        .catch(e => {
-            throw e;
-        })
+        const token = user.generateJWT();
+        return ({ user: user, token: token })
+    } catch (error) {
+        throw error;
+    }
+
 }
 async function login(root, { email, password }, context) {
-    return context.models.User.findOne({
-        where: {
-            email: email,
-            provider: 'basic'
-        }
-    })
-        .then(userdb => {
-            if (userdb) {
-                if (userdb.validPassword(password) && userdb.password !== null) {
-                    const token = userdb.generateJWT();
-                    return ({ user: userdb, token: token })
-                }
-                else {
-                    throw new Error("Email or Password is incorrect!")
-                }
+    try {
+        const user = await context.models.User.findOne({
+            where: {
+                email: email,
+                provider: 'basic'
             }
-
+        });
+        if (user) {
+            if (user.validPassword(password) && user.password !== null) {
+                const token = user.generateJWT();
+                return ({ user: user, token: token })
+            }
             else {
-                throw new Error("Email or Password is incorrect!");
+                throw new Error("Email or Password is incorrect!")
             }
-        })
-        .catch(e => {
-            throw e;
-        })
+        }
+        else {
+            throw new Error("Email or Password is incorrect!");
+        }
+    } catch (error) {
+        throw error;
+    }
+
 }
 async function authFacebook(root, { input: { accessToken } }, context) {
     context.req.body = {
@@ -126,111 +125,114 @@ async function authGoogle(root, { input: { accessToken } }, context) {
 }
 async function createTitle(root, { name, background }, context) {
     let userId = getUserId(context);
-    return context.models.Title.create({
-        author: userId,
-        name: name,
-        background: background !== null ? background : null
-    })
-        .then(titleDb => {
-            context.pubsub.publish("NEW_TITLE", titleDb);
-            return titleDb;
+    try {
+        const title = await context.models.Title.create({
+            author: userId,
+            name: name,
+            background: background !== null ? background : null
         })
-        .catch(err => {
-            return err
-        })
+        context.pubsub.publish("NEW_TITLE", title);
+        return title;
+    }
+    catch (error) {
+        throw error;
+    }
+
 }
 async function updateTitle(root, { id, name, background }, context) {
     let userId = getUserId(context);
-    return context.models.Title.findOne({
-        where: {
-            id: id,
-            author: userId
+    try {
+        const title = await context.models.Title.findOne({
+            where: {
+                id: id,
+                author: userId
+            }
+        })
+        if (title) {
+            if (name !== undefined) {
+                title.name = name;
+            }
+            if (background !== undefined) {
+                title.background = background;
+            }
+            return title.save();
         }
-    })
-        .then(titleDb => {
-            if (titleDb) {
-                if (name !== undefined) {
-                    titleDb.name = name;
-                }
-                if (background !== undefined) {
-                    titleDb.background = background;
-                }
-                return titleDb.save()
-            }
-            else {
-                throw new Error("Title does not exist");
-            }
+        else {
+            throw new Error("Title does not exist");
+        }
+    }
+    catch (error) {
+        throw error;
+    }
 
-        })
-        .catch(err => {
-            return err;
-        })
+
 }
 async function deleteTitle(root, { id }, context) {
     let userId = getUserId(context);
     // write logic to delete rating and stories too 
-    return context.models.Title.destroy({
-        where: {
-            id: id,
-            author: userId
-        }
-    })
-        .then(() => {
-            return true;
+    try {
+        const deleteTitle = await context.models.Title.destroy({
+            where: {
+                id: id,
+                author: userId
+            }
         })
-        .catch(err => {
-            return err;
-        })
+        return deleteTitle;
+    }
+    catch (error) {
+        throw error;
+    }
 
 }
 async function createStory(root, { story, titleId }, context) {
     let userId = getUserId(context);
-    return context.models.Story.create({
-        story: story,
-        titleId: titleId,
-        contributor: userId
-    })
-        .then(storyDb => {
-            context.pubsub.publish("NEW_STORY", storyDb);
-            return storyDb;
+    try {
+        const storyDb = await context.models.Story.create({
+            story: story,
+            titleId: titleId,
+            contributor: userId
         })
-        .catch(err => {
-            return err
-        })
+        context.pubsub.publish("NEW_STORY", storyDb);
+        return storyDb;
+    }
+    catch (error) {
+        throw error;
+    }
 }
 async function updateStory(root, { storyId, story }, context) {
     let userId = getUserId(context);
-    return context.models.Story.findOne({
-        where: {
-            id: storyId,
-            contributor: userId
-        }
-    })
-        .then(storyDb => {
-            if (storyDb !== undefined) {
-                storyDb.story = story;
+    try {
+        const storyDb = await context.models.Story.findOne({
+            where: {
+                id: storyId,
+                contributor: userId
             }
-            return storyDb.save();
         })
-        .catch(err => {
-            return err;
-        })
+        if (storyDb) {
+            storyDb.story = story;
+        }
+        return storyDb.save();
+    }
+    catch (error) {
+        throw error
+    }
 }
 async function deleteStory(root, { storyId }, context) {
     let userId = getUserId(context);
     //remove any rating to this story before deleting any story
-    return context.models.Story.destroy({
-        where: {
-            id: storyId,
-            contributor: userId
-        }
-    })
-        .then(() => {
-            return true;
+    try {
+        const story = await context.models.Story.destroy({
+            where: {
+                id: storyId,
+                contributor: userId
+            }
         })
-        .catch(err => {
-            return err;
-        })
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+
 }
 async function createRating(root, { value, storyId, comment }, context) {
     let userId = getUserId(context);
@@ -244,18 +246,19 @@ async function createRating(root, { value, storyId, comment }, context) {
 }
 async function deleteRating(root, { id }, context) {
     let userId = getUserId(context);
-    return context.models.Rating.destroy({
-        where: {
-            id: id,
-            ratedBy: userId
-        }
-    })
-        .then(() => {
-            return true;
+    try {
+        const rating = await context.models.Rating.destroy({
+            where: {
+                id: id,
+                ratedBy: userId
+            }
         })
-        .catch(err => {
-            return err;
-        })
+        return true;
+    }
+    catch (error) {
+        throw error;
+    }
+
 }
 module.exports = {
 
