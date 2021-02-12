@@ -33,18 +33,19 @@ async function getTitles(root, { filter, skip, limit, orderBy }, context) {
     else {
         query = {};
     }
-    return context.models.Title.findAndCountAll({
-        where: query,
-        offset: skip,
-        limit: limit,
-        order: [['createdAt', 'DESC']]
-    })
-        .then(titlesDb => {
-            return ({ titles: titlesDb.rows, count: titlesDb.count })
+    try {
+        const titles = await context.models.Title.findAndCountAll({
+            where: query,
+            offset: skip,
+            limit: limit,
+            order: [['createdAt', 'DESC']]
         })
-        .catch(e => {
-            return e.message
-        })
+        return ({ titles: titles.rows, count: titles.count })
+    }
+    catch (error) {
+        throw error;
+    }
+
 }
 async function getTitlesByUser(root, { }, context) {
     const userId = getUserId(context);
@@ -79,26 +80,26 @@ async function getStories(root, { id, filter, skip, limit, orderBy }, context) {
             titleId: id
         };
     }
-    return context.models.Story.findAndCountAll({
-        where: query,
-        attributes: [
-            "id",
-            context.models.sequelize.literal('substr(story, 1, 20) as story'),
-            "createdAt",
-            "contributor",
-            "story",
-            "titleId"
-        ],
-        limit: limit,
-        offset: skip,
-        order: orderBy
-    })
-        .then(storiesDb => {
-            return ({ stories: storiesDb.rows, count: storiesDb.count })
+    try {
+        const stories = await context.models.Story.findAndCountAll({
+            where: query,
+            attributes: [
+                "id",
+                context.models.sequelize.literal('substr(story, 1, 20) as story'),
+                "createdAt",
+                "contributor",
+                "story",
+                "titleId"
+            ],
+            limit: limit,
+            offset: skip,
+            order: orderBy
         })
-        .catch(e => {
-            throw e;
-        })
+        return ({ stories: stories.rows, count: stories.count })
+    }
+    catch(error){
+        return error;
+    }
 }
 async function getStory(root, { id }, context) {
     return context.models.Story.findOne({
