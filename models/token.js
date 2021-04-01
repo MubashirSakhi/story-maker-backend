@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
         }
     }, {});
     ResetToken.associate = function (models) {
-        Token.belongsTo(models.User, { foreignKey: 'resetUser' });
+        ResetToken.belongsTo(models.User, { foreignKey: 'resetUser' });
     }
     ResetToken.prototype.generateJWT = function () {
         const today = new Date();
