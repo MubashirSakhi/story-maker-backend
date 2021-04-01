@@ -8,7 +8,7 @@ but I tweaked it around my needs and added passport js to include social media o
 I created two postman collections to test my code,
 first is to unit test individual queries and second is end to end to test calling all queries in order and storing variables in environmental variables to pass it to other queries.
 ```
-> 1.[Unit Test Postman Collection](https://www.getpostman.com/collections/c8364a125e8b32a07bb)
->2.[End to End Collection](https://www.getpostman.com/collections/5b716aea1daa4498ac5f)
+1.[Unit Test Postman Collection](https://www.getpostman.com/collections/c8364a125e8b32a07bb)
+2.[End to End Collection](https://www.getpostman.com/collections/5b716aea1daa4498ac5f)
 ```
 Learn how to create collections and writes tests in postman
