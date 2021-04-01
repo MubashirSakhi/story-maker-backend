@@ -51,6 +51,7 @@ module.exports = (sequelize, DataTypes) => {
     User.hasMany(models.Title, { foreignKey: "author" });
     User.hasMany(models.Story, { foreignKey: "contributor" });
     User.hasMany(models.Rating, { foreignKey: "ratedBy" });
+    User.hasOne(models.Token,{foreignKey: 'resetUser'})
   };
   User.upsertFbUser = async function ({ accessToken, refreshToken, profile }) {
     const User = this;

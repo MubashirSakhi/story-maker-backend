@@ -114,6 +114,10 @@ const typeDefs = gql`
         createRating(value:Int!,storyId:Int!,comment:String):Rating
         
         deleteRating(id:Int): Boolean
+
+        forgetPassword(email:String): String
+        
+        resetPasswordToken(token: String, password:String): Boolean
       }
     
       

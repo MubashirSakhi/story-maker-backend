@@ -4,6 +4,7 @@ const { APP_SECRET, getUserId } = require('../utils');
 const { authenticateFacebook, authenticateGoogle } = require('../passport');
 const User = require('../../models').User;
 const Sequelize = require('sequelize');
+const token = require('../../models/token');
 const Op = Sequelize.Op;
 
 async function createUser(root, { name, email, password }, context) {
@@ -260,6 +261,72 @@ async function deleteRating(root, { id }, context) {
     }
 
 }
+async function forgetPassword(root, { email }, context) {
+    try {
+        const user = await context.models.User.findOne({
+            where: {
+                email: email
+            }
+        })
+        if (!user) {
+            throw new Error('User does not exist');
+        }
+        if (user) {
+            const existingToken = await context.models.ResetToken.findOne({
+                where: {
+                    resetUser: user.id
+                }
+            })
+            if (existingToken) {
+                await existingToken.destroy()
+            }
+            const today = new Date();
+            const expirationDate = new Date(today);
+            expirationDate.setDate(today.getDate() + 60);
+            let resetTokenJwt = jwt.sign({
+                userId: user.id,
+                exp: parseInt(expirationDate.getTime() / 1000, 10)
+            }, process.env.APP_SECRET);
+            let newResetToken = await context.models.resetToken.create({
+                token: resetTokenJwt,
+                resetUser: user.id
+            })
+            return `localhost:4000/graphql?token=${newResetToken}`;
+        }
+    }
+    catch (error) {
+        throw error
+    }
+}
+async function resetPasswordToken(root, { token, password }, context) {
+    try {
+        let { userId } = jwt.verify(token, process.env.APP_SECRET);
+        let passwordResetToken = await context.models.ResetToken.findOne({
+            token: token,
+            resetUser: userId
+        });
+        if (!passwordResetToken) {
+            throw new Error("Invalid or expired password reset token");
+        }
+        else {
+            let resetUser = await context.models.User.findOne({
+                where: {
+                    id: userId
+                }
+            })
+            resetUser.password = bcrypt.hash(password, 10);
+            await resetUser.save();
+            await passwordResetToken.destroy();
+            return true;
+        }
+
+    }
+    catch(error){
+        throw error;
+    }
+    
+
+}
 module.exports = {
 
     signup,
@@ -273,5 +340,7 @@ module.exports = {
     updateStory,
     deleteStory,
     createRating,
-    deleteRating
+    deleteRating,
+    forgetPassword,
+    resetPasswordToken
 }
