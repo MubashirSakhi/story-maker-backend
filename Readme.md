@@ -12,3 +12,5 @@ first is to unit test individual queries and second is end to end to test callin
 2.End to End Collection https://www.getpostman.com/collections/5b716aea1daa4498ac5f
 ```
 Learn how to create collections and writes tests in postman
+For Collection Runner: https://learning.postman.com/docs/running-collections/intro-to-collection-runs/
+For Tests : https://learning.postman.com/docs/writing-scripts/test-scripts/
